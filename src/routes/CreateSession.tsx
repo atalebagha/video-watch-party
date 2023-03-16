@@ -2,15 +2,39 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Button, TextField } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
+import { useMutation } from 'react-query';
+import axios from 'axios';
+
 
 const CreateSession: React.FC = () => {
   const navigate = useNavigate();
   const [newUrl, setNewUrl] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
 
-  const createSession = async () => {
-    setNewUrl("");
+	const mutation = useMutation((newSession: any) => {
+		return axios.post('http://localhost:4001/create', newSession);
+	}, {
+		onSuccess(data: any) {
+      navigate(`/watch/${data?.data?.id as any}`);
+		},
+		onSettled() {
+			setIsLoading(false);
+		}
+	})
+
+	const createSession = () => {
+    setIsLoading(true);
+
     const sessionId = uuidv4();
-    navigate(`/watch/${sessionId}`);
+		const value = {
+			type: 'CREATE',
+		  payload: {
+				url: newUrl,
+				sessionId,
+			}
+		}
+
+		mutation.mutate(value);
   };
 
   return (
