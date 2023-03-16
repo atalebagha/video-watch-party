@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import VideoPlayer from "../components/VideoPlayer";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Button, TextField, Tooltip } from "@mui/material";
+import { useQuery } from 'react-query';
+import axios from 'axios';
 import LinkIcon from "@mui/icons-material/Link";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
@@ -13,12 +15,20 @@ const WatchSession: React.FC = () => {
 
   const [linkCopied, setLinkCopied] = useState(false);
 
+	 const result: any  = useQuery('session', () => {
+		 	return axios.get('http://localhost:4001/watch/' + sessionId);
+	 })
   useEffect(() => {
+				if (result.error) {
+					 navigate('/');
+				}
+			 if (result) {
+					 setUrl(result?.data?.data?.url);
+				}
     // load video by session ID -- right now we just hardcode a constant video but you should be able to load the video associated with the session
-    setUrl("https://www.youtube.com/watch?v=NX1eKLReSpY");
 
     // if session ID doesn't exist, you'll probably want to redirect back to the home / create session page
-  }, [sessionId]);
+  }, [result, navigate]);
 
   if (!!url) {
     return (
@@ -35,9 +45,10 @@ const WatchSession: React.FC = () => {
             label="Youtube URL"
             variant="outlined"
             value={url}
+											 onChange={e => { setUrl(e.target.value)}}
             inputProps={{
-              readOnly: true,
-              disabled: true,
+              readOnly: false,
+              disabled: false,
             }}
             fullWidth
           />
@@ -78,7 +89,7 @@ const WatchSession: React.FC = () => {
             </Button>
           </Tooltip>
         </Box>
-        <VideoPlayer url={url} />;
+        <VideoPlayer url={url} setUrl={setUrl} />;
       </>
     );
   }
